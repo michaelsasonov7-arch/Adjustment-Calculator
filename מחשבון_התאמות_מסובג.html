@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מחשבון התאמות</title>
+<style>
+:root{--bg:#f6f7f9;--fg:#15181d;--card:#fff;--bd:#d5d9e0;--ok:#16883a;--bad:#c62828;--ac:#2456c7;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161a;--fg:#e8eaee;--card:#1e2127;--bd:#363b45;--ok:#4cc474;--bad:#ff6b6b;--ac:#7aa2ff}}
+:root[data-theme="dark"]{--bg:#14161a;--fg:#e8eaee;--card:#1e2127;--bd:#363b45;--ok:#4cc474;--bad:#ff6b6b;--ac:#7aa2ff}
+html,body{background:var(--bg)}*{box-sizing:border-box}
+body{margin:0;color:var(--fg);font-family:system-ui,Arial,sans-serif;padding:12px;max-width:680px;margin-inline:auto}
+h1{font-size:20px;margin:6px 0}h3{margin:14px 0 4px;font-size:16px}.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.g{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}label{font-size:12px;display:block;text-align:center;font-weight:600}
+input[type=text],input[type=number],select{width:100%;font-size:16px;padding:8px 2px;text-align:center;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg)}
+button{padding:12px;font-size:17px;border:0;border-radius:10px;background:var(--ac);color:#fff}
+.btns{display:flex;gap:8px;margin-top:10px}.btns button{margin:0}#go{flex:2}#clr{flex:1;background:var(--bd);color:var(--fg)}#sign{flex:0 0 52px;background:var(--bd);color:var(--fg)}#hb,#lb,#th{font-size:14px;padding:8px 12px;white-space:nowrap}.tb{display:flex;gap:6px}
+.v{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;text-align:center;margin:6px 0}.v div{padding:8px 2px;border-radius:8px;font-weight:700;border:2px solid}
+.ok{color:var(--ok);border-color:var(--ok)}.bad{color:var(--bad);border-color:var(--bad)}.v small{display:block;font-weight:400;font-size:11px}
+.ins{font-size:16px;line-height:1.7;margin:4px 0}.tag{font-size:12px;opacity:.75}.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;border:1px solid;margin-inline-start:6px}
+.best{border:2px solid var(--ok);background:linear-gradient(180deg,rgba(22,136,58,.14),var(--card));animation:gl 2.2s ease-in-out infinite}@keyframes gl{0%,100%{box-shadow:0 0 0 3px rgba(22,136,58,.25),0 0 14px 2px rgba(22,136,58,.45)}50%{box-shadow:0 0 0 4px rgba(22,136,58,.4),0 0 30px 8px rgba(22,136,58,.7)}}
+details{font-size:14px}details summary{cursor:pointer;padding:4px 0}.opt label{display:block;text-align:right;font-weight:400;font-size:14px;margin:6px 0}.opt select,.opt input[type=number]{width:70px;font-size:15px;padding:4px}
+#help{display:none}#help p,#help li{font-size:14px;line-height:1.6;margin:3px 0}#help ul,#help ol{padding-inline-start:20px;margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;text-align:center;margin:4px 0}th,td{border:1px solid var(--bd);padding:3px}
+.sc{overflow-x:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.chip{border:1px solid var(--bd);border-radius:99px;padding:4px 10px;font-size:13px}.chip b{cursor:pointer;margin-inline-start:8px;color:var(--bad)}.cb{display:flex;flex-wrap:wrap;gap:4px 12px;margin:4px 0}.opt .cb label{display:inline-flex;gap:4px;align-items:center;margin:0}.mini{font-size:13px;padding:4px 10px;margin:2px}.row{display:flex;gap:6px}.row select{flex:1}
+.err{outline:2px solid var(--bad);border-color:var(--bad)!important}.warn{border-color:#b26a00}
+.alts{margin-top:8px}.alt{border-top:1px dashed var(--bd);padding:6px 0;font-size:14px}.altv{font-size:13px}
+#max{width:auto;min-width:125px}
+.pj{font-size:14px;padding:8px 12px;background:var(--bd);color:var(--fg)}.pj.on{background:var(--ac);color:#fff}
+</style></head><body>
+<div class="top"><h1>מחשבון התאמות <span id="ptag" class="tag"></span></h1><div class="tb"><button id="pj1" class="pj">ד</button><button id="pj2" class="pj">ה</button><button id="th">◐ אוטו</button><button id="hb">הסבר מלא</button></div></div>
+<div id="help" class="card"></div>
+<div class="card"><div class="g" id="inp"></div><div class="btns"><button id="go">חשב</button><button id="clr">נקה הכל</button><button id="sign" title="הפוך סימן לשדה הפעיל">±</button></div>
+<div id="occnote" class="tag"></div></div>
+<div id="out" aria-live="polite"></div>
+<div class="card opt"><details><summary>נקודות תפוסות <span id="osum" class="tag"></span></summary>
+<p class="tag">סמן נקודות שכבר יש בהן מחבר ותוספת. הן לא ייכנסו לחישוב, ולא משנה מה יש בהן.</p>
+<div id="occ"></div><button class="mini" id="oclr">נקה תפוסות</button>
+</details></div>
+<div class="card opt"><details><summary>הגדרות והנחות (ניתן לשינוי)</summary>
+<label>מקסימום תוספות: <select id="max"><option>1</option><option>2</option><option>3</option><option>4</option><option value="99" selected>עד טולרנס</option></select></label>
+<label id="r_tol1">טולרנס ±: <input type="text" inputmode="decimal" dir="ltr" id="tol" value="70" style="width:80px"></label>
+<label id="r_tol2" style="display:none">טולרנס ± ל-Xin, Y, Z, Xtot: <input type="text" inputmode="decimal" dir="ltr" id="tol2" value="50" style="width:70px"> · ל-Xout: <input type="text" inputmode="decimal" dir="ltr" id="tolx" value="100" style="width:70px"></label>
+<label id="r_est" style="display:none"><input type="checkbox" id="est" checked> השתמש בערכים משוערים ב-M1–M4 (תוספות 4–9). הם אינם מהטבלה: חושבו בהרחבה ליניארית מתוספות 1–3</label>
+<label id="r_late" style="display:none"><input type="checkbox" id="late"> אפשר תוספות 8 ו-9 מההתחלה. ברירת מחדל: רק אם בלעדיהן אין פתרון בטולרנס</label>
+<label><input type="checkbox" id="oZ" checked> Z של Outer משפיע על Z</label>
+<label><input type="checkbox" id="iXt" checked> X של Inner משפיע גם על Xtotal</label>
+<label><input type="checkbox" id="oXt" checked> X של Outer משפיע גם על Xtotal</label>
+<label>כיול: קישור Inner→Xout <input type="text" id="cin" value="0" inputmode="decimal" dir="ltr" style="width:70px"> <span class="tag">0 = ללא. מחושב מכרטיס האימות.</span></label>
+<label><input type="checkbox" id="neg"> הפוך סימן: הוספת תוספת מורידה את הערך</label>
+<label><input type="checkbox" id="uniq"> כל תוספת פעם אחת בלבד (אותו סוג לא יוצע פעמיים)</label>
+<label><input type="checkbox" id="spec"> <span id="spectxt">כלול תוספות מיוחדות d / t (משמעות לא ידועה)</span></label>
+<label><input type="checkbox" id="deep"> חיפוש מעמיק להרחבה מעל 4 נקודות (איטי יותר, מועמדים רבים יותר)</label>
+<label><input type="checkbox" id="full4"> חיפוש מלא ל-4 נקודות (מדויק; כ-3 שניות במחשב, 15 עד 20 שניות ויותר בטלפון איטי; ניתן לבטל)</label>
+<div class="tag">ההגדרות והנקודות התפוסות נשמרות במכשיר.</div><button class="mini" id="rst">אפס הגדרות</button>
+</details></div>
+<script>
+(()=>{try{const o=['g','i','m','b','a','l'].join('')+'_';[['v2','calc_a'],['v2_h','calc_b'],['proj','calc_p'],['theme','calc_t']].forEach(([x,n])=>{const v=localStorage.getItem(o+x);if(v!==null){if(localStorage.getItem(n)===null)localStorage.setItem(n,v);localStorage.removeItem(o+x)}})}catch(e){}})();
+const NM=['Xin','Y','Z','Xtotal','Xout'];
+const BL=['3/16','3/16','1/4','5/16','5/16','3/8','1/2','1/2','1/2'];
+const XS=[-27,-42,-59,-75,-92,-107,-124,-143,-159],YS=[9,14,20,26,32,39,46,54,62],ZS=[4,6,9,11,13,15,18,21,23];
+const XA=[-12,-18,-25,-32,-39,-46,-53,-61,-68],YA=[11,18,25,33,41,48,57,67,76],ZA=[11,17,24,30,37,42,49,57,63];
+const XB=[-14,-21,-30,-38,-47,-54,-63,-73,-81],YB=[10,16,23,30,37,45,53,62,71],ZB=[8,13,18,23,28,33,38,44,49];
+const YC=[-11,-17,-25,-32,-40,-47,-56,-66,-75],XC=[11,18,25,32,39,45,52,61,67];
+const ZD=[11,18,25,33,41,49,58,68,77],YD=[4,6,9,11,13,15,18,21,23];
+const ng=a=>a.map(v=>-v),W9=[1,2,3,4,5,6,7,8,9],mm=['2mm','3mm','4mm','5mm','6mm'],BM=['3/16','1/4','5/16','5/16','3/8'];
+const XM=[-194,-283,-368,-456,-542],YM=[63,95,127,161,197],ZM=[82,122,162,205,249],O=[0,0,0,0,0];
+const I=[];
+function inner(p,b,w,X,Y,Z,sp){w.forEach((wt,i)=>I.push({g:'in',p,b:b[i],w:wt,e:[X[i],Y[i],Z[i]],sp}))}
+inner('M1',['3/16','1/4','1/4','5/16','3/8','3/8','1/2','1/2','1/2'],[.5,1,2,3,4,5,6,7,8],[15,22,32,44,57,66,79,88,97],Array(9).fill(0),[-10,-15,-23,-32,-41,-49,-59,-66,-74]);
+inner('M2',['3/16','1/4','1/4','5/16','3/8','3/8','1/2','1/2','1/2'],[.5,1,2,3,4,5,6,7,8],[15,22,32,44,57,66,79,88,97],Array(9).fill(0),[10,15,23,32,41,49,59,66,74]);
+inner('M3',['3/16','3/16','3/16','1/4','5/16','5/16'],[.5,1,2,3,4,5],[-20,-29,-45,-64,-82,-101],Array(6).fill(0),Array(6).fill(0));
+inner('M3',['3/16','3/16','1/4','1/4','5/16'],['1d','2d','3d','4d','5d'],[-65,-118,-174,-230,-287],O,O,1);
+inner('M3',['3/16','3/16','3/16'],['9t','12t','13t'],[-167,-326,-389],O,O,1);
+inner('M20',BL,W9,XA,YA,ng(ZA));
+inner('M21',BL,W9,XB,YB,ng(ZB));inner('M22',BL,W9,XB,YB,ZB);
+inner('M23',BL,W9,XS,YS,ng(ZS));inner('M24',BL,W9,XS,YS,ZS);
+inner('M25',BM,mm,XM,YM,O);inner('M26',BL,W9,XA,YA,ZA);
+inner('M30',BL,W9,XC,YC,Array(9).fill(0));inner('M31',BL,W9,XA,ng(YA),ZA);
+inner('M32',BL,W9,XB,ng(YB),ZB);inner('M33',BL,W9,XB,ng(YB),ng(ZB));
+inner('M34',BL,W9,XS,ng(YS),ZS);inner('M35',BL,W9,XS,ng(YS),ng(ZS));
+inner('M36',BM,mm,XM,ng(YM),O);inner('M37',BL,W9,XA,ng(YA),ng(ZA));
+inner('M40',BL,W9,XS,YD,ZD);inner('M41',BL,W9,XS,ng(YD),ZD);inner('M42',BM,mm,XM,O,ZM);
+inner('M50',BL,W9,XS,ng(YD),ng(ZD));inner('M51',BL,W9,XS,YD,ng(ZD));inner('M52',BM,mm,XM,O,ng(ZM));
+const OX=[6,9,13,18,22,27,33,39,45],OL=[26,40,57,72,88,102,119,137,153],OS=[13,21,29,37,46,53,62,71,79];
+const OU=[];
+function outer(p,Z){W9.forEach((w,i)=>OU.push({g:'out',p,b:BL[i],w,e:[OX[i],Z[i]]}))}
+outer('M60',ng(OL));outer('M61',ng(OS));outer('M62',OS);outer('M63',OL);outer('M64',OL);outer('M65',OS);outer('M66',ng(OS));outer('M67',ng(OL));
+let ALL=I.concat(OU),PROJ=1;
+const W8=[1,2,3,4,5,6,8,9],B8=['3/16','3/16','1/4','5/16','5/16','3/8','1/2','1/2'];
+const I2=[],OU2=[];
+const in2=(p,X,Y,Z)=>W8.forEach((w,i)=>I2.push({g:'in',p,b:B8[i],w,e:[X[i],Y[i],Z[i]],late:w>=8}));
+const df2=(p,rows)=>rows.forEach((e,i)=>I2.push({g:'in',p,b:'3/16',w:['DEFAULT','DEFAULT_1','DEFAULT_2'][i],e,sp:1}));
+const sm2=(p,X,Y,Z)=>X.forEach((x,i)=>I2.push({g:'in',p,b:['3/16','3/16','1/4'][i],w:i+1,e:[x,Y[i],Z[i]]}));
+const XN=[-31,-48,-67,-87,-104,-123,-162,-180],YP=[9,15,22,29,36,43,59,68],ZP=[2,4,5,7,8,10,13,14],Y4=[4,6,9,11,13,16,21,23],Z4=[10,17,24,32,39,47,65,73];
+const RW=[31,48,67,87,104,123,142.5,162,180],BE=['3/16','3/16','1/4','5/16','5/16','3/8','1/2','1/2','1/2'];
+function est2(p,X,Y,Z){const ax=[X,Y,Z],kk=ax.map(a=>{let n=0,d=0;for(let i=0;i<3;i++){n+=a[i]*RW[i];d+=RW[i]*RW[i]}return n/d});
+ for(let i=0;i<9;i++){const e=ax.map((a,k)=>i<3?a[i]:Math.round(kk[k]*RW[i]));I2.push({g:'in',p,b:BE[i],w:i+1,e,est:i>=3,late:i+1>=8})}}
+est2('M1',[18,29,41],[-19,-30,-43],[-14,-21,-30]);
+est2('M2',[18,29,41],[-19,-30,-43],[14,21,30]);
+est2('M3',[18,29,41],[19,30,43],[14,21,30]);
+est2('M4',[18,29,41],[19,30,43],[-14,-21,-30]);
+sm2('M14',[-33,-52,-74],[-3,-4,-6],[0,0,0]);sm2('M15',[-33,-52,-74],[0,0,0],[0,0,0]);sm2('M16',[-33,-52,-74],[3,4,6],[0,0,0]);
+in2('M20',XN,YP,ng(ZP));in2('M21',XN,YP,ZP);
+I2.push({g:'in',p:'M22',b:'3/16',w:1,e:[15,17,-5]});I2.push({g:'in',p:'M23',b:'3/16',w:1,e:[15,17,5]});
+in2('M30',[11,17,23,30,36,43,57,63],[-17,-26,-37,-49,-60,-72,-97,-109],[-5,-8,-11,-14,-17,-20,-26,-29]);
+df2('M30',[[101,-295,-83],[143,-228,-65],[312,-533,-143]]);
+in2('M31',[11,17,23,30,36,43,57,63],[-17,-26,-37,-49,-60,-72,-97,-109],[5,8,11,14,17,20,26,29]);
+df2('M31',[[101,-295,83],[143,-228,65],[312,-533,143]]);
+in2('M32',Array(8).fill(0),[-15,-23,-33,-44,-53,-64,-87,-98],Array(8).fill(0));
+df2('M32',[[0,-262,0],[0,-201,0],[0,-476,0]]);
+in2('M33',XN,ng(Y4.map((_,i)=>[9,15,22,29,36,43,59,68][i])),ng(ZP));in2('M34',XN,ng([9,15,22,29,36,43,59,68]),ZP);
+in2('M41',XN,Y4,ng(Z4));in2('M42',XN,ng(Y4),ng(Z4));
+in2('M56',XN,ng(Y4),Z4);in2('M57',XN,Y4,Z4);
+in2('M70',[15,23,32,42,50,59,78,87],[-6,-9,-13,-17,-21,-26,-35,-40],[-18,-28,-40,-53,-64,-77,-103,-116]);
+in2('M71',[6,10,13,18,21,25,33,36],[-5,-8,-11,-15,-19,-23,-31,-36],[-16,-24,-35,-46,-55,-66,-89,-100]);
+in2('M72',[15,23,32,42,50,59,78,87],[-14,-22,-32,-42,-50,-60,-81,-91],[-11,-17,-25,-32,-40,-48,-64,-73]);
+in2('M73',[6,10,13,18,21,25,33,36],[-12,-19,-26,-35,-42,-51,-68,-77],[-10,-15,-22,-29,-36,-43,-58,-66]);
+in2('M74',[11,17,24,31,37,44,58,64],[-10,-16,-23,-30,-36,-44,-59,-66],[-15,-23,-33,-43,-52,-63,-85,-95]);
+const OX2=[6,9,13,18,22,28,39,45],OZ2=[26,40,57,74,88,104,137,153];
+const out2=(p,Z)=>W8.forEach((w,i)=>OU2.push({g:'out',p,b:B8[i],w,e:[OX2[i],Z[i]],late:w>=8}));
+out2('M60',ng(OZ2));out2('M63',OZ2);out2('M64',OZ2);out2('M67',ng(OZ2));
+const $=id=>document.getElementById(id);
+$('inp').innerHTML=NM.map((k,i)=>`<div><label for="v${i}">${k}</label><input type="text" dir="ltr" inputmode="decimal" autocomplete="off" enterkeyhint="${i<4?'next':'done'}" autocorrect="off" autocapitalize="off" spellcheck="false" id="v${i}"></div>`).join('');
+let lastEnter=0,kdSeen=false;
+const onEnter=e=>{if(!(e.key==='Enter'||e.keyCode===13||e.which===13))return;e.preventDefault();if(e.repeat)return;
+ if(e.type==='keyup'){if(kdSeen){kdSeen=false;return}}else kdSeen=true;
+ const t=Date.now();if(t-lastEnter<150)return;lastEnter=t;
+ const i=+e.target.id.slice(1);if(i<4){const n=$('v'+(i+1));n.focus();if(n.select)n.select()}else{e.target.blur()}};
+$('inp').addEventListener('keydown',onEnter);$('inp').addEventListener('keyup',onEnter);
+$('clr').onclick=()=>{if(busy){CANCEL=true;SILENT=true}NM.forEach((_,i)=>{$('v'+i).value=''});$('out').innerHTML='';clearErr();$('v0').focus()};
+function parseNum(raw){
+ const bad=m=>({err:m});
+ let t=String(raw).replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,'').trim();
+ if(t==='')return{empty:true,v:0};
+ if(/\s/.test(t))return bad('רווח בתוך המספר');
+ t=t.replace(/[\u2212\u2013\u2014\u05BE]/g,'-');
+ const mc=(t.match(/-/g)||[]).length;let neg=false;
+ if(mc>1)return bad('יותר ממינוס אחד');
+ if(mc===1){if(t[0]==='-'){neg=true;t=t.slice(1)}else if(t[t.length-1]==='-'){neg=true;t=t.slice(0,-1)}else return bad('מינוס באמצע המספר')}
+ else if(t[0]==='+')t=t.slice(1);
+ if(t==='')return bad('חסר מספר אחרי הסימן');
+ if(!/^[0-9.,]+$/.test(t))return bad('תווים לא חוקיים');
+ const cD=(t.match(/\./g)||[]).length,cC=(t.match(/,/g)||[]).length;
+ if(cD&&cC){
+  const dec=t.lastIndexOf('.')>t.lastIndexOf(',')?'.':',',th=dec==='.'?',':'.';
+  const parts=t.split(dec);
+  if(parts.length!==2)return bad('פורמט עשרוני לא חד-משמעי');
+  const ip=parts[0].split(th).join(','),fp=parts[1];
+  if(fp.indexOf(th)>=0||!/^\d+$/.test(fp))return bad('פורמט עשרוני לא חד-משמעי');
+  if(!/^\d{1,3}(,\d{3})+$/.test(ip))return bad('מפריד אלפים לא תקין (קבוצות של 3 ספרות, למשל 1,234.5)');
+  t=parts[0].split(th).join('')+'.'+fp}
+ else if(cC){
+  if(cC>1)return bad('יותר מפסיק אחד');
+  const ip=t.split(',')[0],fp=t.split(',')[1];
+  if(fp.length===3&&ip!==''&&ip!=='0'&&ip.length<=3)return bad('פסיק עמום: כתוב נקודה עשרונית (למשל 1.234) או את המספר בלי פסיק');
+  t=ip+'.'+fp}
+ else if(cD>1)return bad('יותר מנקודה אחת');
+ if(!/^(\d+\.?\d*|\.\d+)$/.test(t))return bad('פורמט לא חוקי');
+ const v=parseFloat(t);
+ if(!isFinite(v)||v>10000)return bad('מחוץ לטווח (עד 10000)');
+ return{v:neg?-v:v}
+}
+function clearErr(){if(document.querySelectorAll)document.querySelectorAll('.err').forEach(x=>x.classList.remove('err'))}
+function showErr(title,items,ids){$('out').innerHTML='<div class="card bad'+(ids&&ids.length?' inputerr':'')+'" style="border-width:2px"><b>'+title+'</b><br>'+items.join('<br>')+'</div>';clearErr();(ids||[]).forEach(id=>$(id).classList.add('err'));const f=ids&&ids[0]?$(ids[0]):null;if(f&&f.focus)f.focus()}
+const fieldEdited=e=>{const t=e.target;if(t.classList)t.classList.remove('err');if(!document.querySelector('.err')&&$('out').querySelector('.inputerr'))$('out').innerHTML=''};
+$('inp').addEventListener('input',fieldEdited);$('tol').addEventListener('input',fieldEdited);$('tol2').addEventListener('input',fieldEdited);$('tolx').addEventListener('input',fieldEdited);$('cin').addEventListener('input',fieldEdited);
+function vecF(r,f){const v=[0,0,0,0,0];
+ if(r.g=='in'){const cc=f.c||0;v[0]=r.e[0];v[1]=r.e[1];v[2]=r.e[2];v[3]=(f.iXt?r.e[0]:0)+cc*r.e[0];v[4]=cc*r.e[0]}
+ else{v[4]=r.e[0];if(f.oXt)v[3]=r.e[0];if(f.oZ)v[2]=r.e[1]}
+ return v.map(x=>x*f.s)}
+const calC=()=>{const p=parseNum($('cin').value);return p.err||p.empty?0:Math.max(-1,Math.min(1,p.v))};
+const flagsNow=()=>({s:$('neg').checked?-1:1,iXt:$('iXt').checked,oXt:$('oXt').checked,oZ:$('oZ').checked,c:calC()});
+function vec(r){return vecF(r,flagsNow())}
+const fmt=x=>String(Math.round(x*10)/10);
+const label=r=>`${r.g=='in'?'Inner':'Outer'} · מיקום <b>${r.p}</b> · מחבר <b><bdi dir="ltr">${r.b==='?'?'לא נתון':r.b+'"'}</bdi></b> · תוספת <b>${r.w}</b>${PROJ===1&&r.g==='out'&&String(r.w)==='7'?' <span class="tag">(שורה מוצללת בטבלה, ערך נקרא חלקית)</span>':''}${r.est?' <span class="tag">(ערך משוער, אינו מהטבלה'+(String(r.w)==='7'?'; המחבר מוסק מפרויקט ד':'')+')</span>':''}`;
+function vals(c,TL){return '<div class="v">'+c.map((x,i)=>{const T=TL[i],o=Math.abs(x)<=T;return `<div class="${o?'ok':'bad'}"><small>${NM[i]}</small><bdi dir="ltr">${fmt(x)}</bdi>${o?'':`<small>חריגה <bdi dir="ltr">${fmt(Math.abs(x)-T)}</bdi></small>`}</div>`}).join('')+'</div>'}
+const PEN=1e13;
+let busy=false,CANCEL=false,SILENT=false,LAST=null;
+const lockUI=on=>document.querySelectorAll('.opt input,.opt select,.opt button,#inp input,#sign').forEach(x=>{x.disabled=on});
+$('go').onclick=async()=>{if(busy){CANCEL=true;return}busy=true;CANCEL=false;SILENT=false;lockUI(true);$('go').textContent='בטל חישוב';await new Promise(r=>setTimeout(r,30));try{await run()}catch(err){if(err&&err.message==='__cancel'){if(!SILENT)$('out').innerHTML='<div class="card"><b>החישוב בוטל.</b></div>'}else showErr('שגיאה בחישוב',[String(err&&err.message||err)])}finally{busy=false;CANCEL=false;SILENT=false;lockUI(false);$('go').textContent='חשב'}};
+async function run(allowLate){
+ let TL;
+ if(PROJ===1){const tp=String($('tol').value).trim()===''?{v:70}:parseNum($('tol').value);
+  if(tp.err||tp.v<0){showErr('טולרנס לא תקין',[tp.err||'חייב להיות 0 או גדול יותר'],['tol']);return}TL=[tp.v,tp.v,tp.v,tp.v,tp.v]}
+ else{const t2=String($('tol2').value).trim()===''?{v:50}:parseNum($('tol2').value),tx=String($('tolx').value).trim()===''?{v:100}:parseNum($('tolx').value);
+  if(t2.err||t2.v<0){showErr('טולרנס לא תקין',[t2.err||'חייב להיות 0 או גדול יותר'],['tol2']);return}
+  if(tx.err||tx.v<0){showErr('טולרנס Xout לא תקין',[tx.err||'חייב להיות 0 או גדול יותר'],['tolx']);return}TL=[t2.v,t2.v,t2.v,t2.v,tx.v]}
+ const cp=String($('cin').value).trim()===''?{v:0}:parseNum($('cin').value);
+ if(cp.err||Math.abs(cp.v)>1){showErr('מקדם כיול לא תקין',[cp.err||'חייב להיות בין -1 ל-1'],['cin']);return}
+ const M0=+$('max').value,M=Math.min(M0,4),auto=M0>4;
+ const full4=$('full4').checked&&M>=4;
+ const pv=NM.map((_,i)=>parseNum($('v'+i).value));
+ const bad=[],badIds=[];pv.forEach((p,i)=>{if(p.err){bad.push(NM[i]+': '+p.err);badIds.push('v'+i)}});
+ if(bad.length){showErr('קלט לא תקין',bad,badIds);return}
+ clearErr();
+ if(pv.every(p=>p.empty)){$('out').innerHTML='<div class="card"><b>הזן את ערכי המכשיר</b><br>כל השדות ריקים, אז אין מה לחשב.</div>';return}
+ const cur=pv.map(p=>p.v);
+ const emptyNames=NM.filter((_,i)=>pv[i].empty);
+ const warnHtml=emptyNames.length?'<div class="card warn"><b>שים לב:</b> '+(emptyNames.length==1?'השדה '+emptyNames[0]+' ריק ונחשב 0.':'השדות '+emptyNames.join(', ')+' ריקים ונחשבו 0.')+'</div>':'';
+ const list=[];
+ ALL.forEach(r=>{if(occ.has(PK(r))||(r.sp&&!$('spec').checked)||(r.est&&!$('est').checked)||(r.late&&!(allowLate||$('late').checked)))return;list.push({r,v:vec(r),k:PK(r)})});
+ const n=list.length;
+ if(!n){$('out').innerHTML='<div class="card bad"><b>אין נקודות פנויות לחישוב.</b><br>כל הנקודות מסומנות כתפוסות.<br><button id="fixinv" class="mini">נקה תפוסות והרץ</button></div>';$('fixinv').onclick=()=>{$('oclr').onclick();saveState();$('go').click()};return}
+ const V=new Float64Array(n*5),P=new Int32Array(n),pm=Object.create(null);let pc=0;
+ const U=$('uniq').checked,Q=new Int32Array(n),qm=Object.create(null);let qc=0;
+ list.forEach((c,i)=>{for(let d=0;d<5;d++)V[i*5+d]=c.v[d];if(!(c.k in pm))pm[c.k]=pc++;P[i]=pm[c.k];const wk=String(c.r.w);if(!(wk in qm))qm[wk]=qc++;Q[i]=qm[wk]});
+ const [tl0,tl1,tl2,tl3,tl4]=TL,sc=(a,b,c,d,e)=>{let k=0;if(a>tl0||a<-tl0)k=1;if(b>tl1||b<-tl1)k++;if(c>tl2||c<-tl2)k++;if(d>tl3||d<-tl3)k++;if(e>tl4||e<-tl4)k++;return k*PEN+a*a+b*b+c*c+d*d+e*e};
+ let _t=performance.now();
+ const chk=async msg=>{if(CANCEL)throw new Error('__cancel');const t=performance.now();if(t-_t>50){if(msg)$('go').textContent='בטל — '+msg;await new Promise(r=>setTimeout(r,0));_t=performance.now();if(CANCEL)throw new Error('__cancel')}};
+ const [c0,c1,c2,c3,c4]=cur,B={};
+ const ALT={1:[],2:[],3:[],4:[]},T3={1:Infinity,2:Infinity,3:Infinity,4:Infinity};
+ const upd=(k,s,idx)=>{if(s>=T3[k])return;const L=ALT[k],key=idx.slice().sort((a,b)=>a-b).join();if(L.some(x=>x.key===key))return;L.push({s,idx,key});L.sort((a,b)=>a.s-b.s);if(L.length>3)L.length=3;T3[k]=L.length<3?Infinity:L[2].s;B[k]=L[0]};
+ const beam=[],pb=[],s4a=[];let thr=Infinity,pthr=Infinity,thr4=Infinity;
+ const DW=$('deep').checked?5000:1500;
+ const key4=(x,y,z,w)=>{let t;if(x>y){t=x;x=y;y=t}if(z>w){t=z;z=w;w=t}if(x>z){t=x;x=z;z=t}if(y>w){t=y;y=w;w=t}if(y>z){t=y;y=z;z=t}return((x*300+y)*300+z)*300+w};
+ const trim4=()=>{s4a.sort((x,y)=>x[0]-y[0]);const seen=new Set(),o=[];for(const a of s4a){const k=key4(a[1],a[2],a[3],a[4]);if(seen.has(k))continue;seen.add(k);o.push(a);if(o.length>=DW)break}s4a.length=0;for(const a of o)s4a.push(a);thr4=o.length>=DW?o[DW-1][0]:Infinity};
+ const rowP=i=>{const a=i*5,s0=c0+V[a],s1=c1+V[a+1],s2=c2+V[a+2],s3=c3+V[a+3],s4=c4+V[a+4];
+  for(let j=i+1;j<n;j++){if(P[i]==P[j]||(U&&Q[i]==Q[j]))continue;const b=j*5;
+   const s=sc(s0+V[b],s1+V[b+1],s2+V[b+2],s3+V[b+3],s4+V[b+4]);if(s<T3[2])upd(2,s,[i,j]);
+   if(M>=4&&!full4&&s<pthr){pb.push([s,i,j]);if(pb.length>5000){pb.sort((x,y)=>x[0]-y[0]);pb.length=500;pthr=pb[499][0]}}}};
+ const rowL=i=>{const a=i*5;
+  for(let j=i+1;j<n;j++){if(P[i]==P[j]||(U&&Q[i]==Q[j]))continue;const b=j*5,
+   s0=c0+V[a]+V[b],s1=c1+V[a+1]+V[b+1],s2=c2+V[a+2]+V[b+2],s3=c3+V[a+3]+V[b+3],s4=c4+V[a+4]+V[b+4];
+   for(let l=j+1;l<n;l++){if(P[l]==P[i]||P[l]==P[j]||(U&&(Q[l]==Q[i]||Q[l]==Q[j])))continue;const d=l*5;
+    const s=sc(s0+V[d],s1+V[d+1],s2+V[d+2],s3+V[d+3],s4+V[d+4]);if(s<T3[3])upd(3,s,[i,j,l]);
+    if(M>=4&&!full4&&s<thr){beam.push([s,i,j,l]);if(beam.length>50000){beam.sort((x,y)=>x[0]-y[0]);beam.length=5000;thr=beam[4999][0]}}}}};
+ const rowT=t=>{const [,i,j,l]=t,a=i*5,b=j*5,d=l*5;
+   const s0=c0+V[a]+V[b]+V[d],s1=c1+V[a+1]+V[b+1]+V[d+1],s2=c2+V[a+2]+V[b+2]+V[d+2],s3=c3+V[a+3]+V[b+3]+V[d+3],s4=c4+V[a+4]+V[b+4]+V[d+4];
+   for(let m=0;m<n;m++){if(P[m]==P[i]||P[m]==P[j]||P[m]==P[l]||(U&&(Q[m]==Q[i]||Q[m]==Q[j]||Q[m]==Q[l])))continue;const e=m*5;
+    const q=sc(s0+V[e],s1+V[e+1],s2+V[e+2],s3+V[e+3],s4+V[e+4]);if(q<T3[4])upd(4,q,[i,j,l,m]);if(needExp&&q<thr4){s4a.push([q,i,j,l,m]);if(s4a.length>DW*20)trim4()}}};
+ const rowQ=t=>{const [,i,j]=t,a=i*5,b=j*5;
+   const s0=c0+V[a]+V[b],s1=c1+V[a+1]+V[b+1],s2=c2+V[a+2]+V[b+2],s3=c3+V[a+3]+V[b+3],s4=c4+V[a+4]+V[b+4];
+   for(let p=0;p<n;p++){if(P[p]==P[i]||P[p]==P[j]||(U&&(Q[p]==Q[i]||Q[p]==Q[j])))continue;const e=p*5;
+    for(let q=p+1;q<n;q++){if(P[q]==P[i]||P[q]==P[j]||P[q]==P[p]||(U&&(Q[q]==Q[i]||Q[q]==Q[j]||Q[q]==Q[p])))continue;const f=q*5;
+     const s=sc(s0+V[e]+V[f],s1+V[e+1]+V[f+1],s2+V[e+2]+V[f+2],s3+V[e+3]+V[f+3],s4+V[e+4]+V[f+4]);
+     if(s<T3[4])upd(4,s,[i,j,p,q]);if(needExp&&s<thr4){s4a.push([s,i,j,p,q]);if(s4a.length>DW*20)trim4()}}}};
+ for(let i=0;i<n;i++){const a=i*5;upd(1,sc(c0+V[a],c1+V[a+1],c2+V[a+2],c3+V[a+3],c4+V[a+4]),[i])}
+ if(M>=2)for(let i=0;i<n;i++){await chk('זוגות');rowP(i)}
+ if(M>=3)for(let i=0;i<n;i++){await chk('שלשות');rowL(i)}
+ const needExp=auto&&pc>=5&&!(sc(c0,c1,c2,c3,c4)<PEN||[1,2,3].some(k=>B[k]&&B[k].s<PEN));
+ if(M>=4&&!full4){beam.sort((x,y)=>x[0]-y[0]);pb.sort((x,y)=>x[0]-y[0]);
+  for(const t of beam.slice(0,5000)){await chk('4 נקודות');rowT(t)}
+  for(const t of pb.slice(0,500)){await chk('4 נקודות');rowQ(t)}}
+ if(full4){
+  const rowF=i=>{let bA=Infinity,bB=Infinity,bC=Infinity,jA=0,lA=0,mA=0,jB=0,lB=0,mB=0,jC=0,lC=0,mC=0;
+   const a=i*5,s0=c0+V[a],s1=c1+V[a+1],s2=c2+V[a+2],s3=c3+V[a+3],s4=c4+V[a+4];
+   for(let j=i+1;j<n;j++){if(P[i]==P[j])continue;const b=j*5,t0=s0+V[b],t1=s1+V[b+1],t2=s2+V[b+2],t3=s3+V[b+3],t4=s4+V[b+4];
+    for(let l=j+1;l<n;l++){if(P[l]==P[i]||P[l]==P[j])continue;const d=l*5,u0=t0+V[d],u1=t1+V[d+1],u2=t2+V[d+2],u3=t3+V[d+3],u4=t4+V[d+4];
+     for(let m=l+1;m<n;m++){if(P[m]==P[i]||P[m]==P[j]||P[m]==P[l])continue;const e=m*5;
+      const q=sc(u0+V[e],u1+V[e+1],u2+V[e+2],u3+V[e+3],u4+V[e+4]);
+      if(q<bC){if(q<bB){if(q<bA){bC=bB;jC=jB;lC=lB;mC=mB;bB=bA;jB=jA;lB=lA;mB=mA;bA=q;jA=j;lA=l;mA=m}else{bC=bB;jC=jB;lC=lB;mC=mB;bB=q;jB=j;lB=l;mB=m}}else{bC=q;jC=j;lC=l;mC=m}}
+      if(needExp&&q<thr4){s4a.push([q,i,j,l,m]);if(s4a.length>DW*20)trim4()}}}}
+   if(bA<Infinity)upd(4,bA,[i,jA,lA,mA]);if(bB<Infinity)upd(4,bB,[i,jB,lB,mB]);if(bC<Infinity)upd(4,bC,[i,jC,lC,mC])};
+  const rowFu=i=>{let bA=Infinity,bB=Infinity,bC=Infinity,jA=0,lA=0,mA=0,jB=0,lB=0,mB=0,jC=0,lC=0,mC=0;
+   const a=i*5,s0=c0+V[a],s1=c1+V[a+1],s2=c2+V[a+2],s3=c3+V[a+3],s4=c4+V[a+4];
+   for(let j=i+1;j<n;j++){if(P[i]==P[j]||(U&&Q[i]==Q[j]))continue;const b=j*5,t0=s0+V[b],t1=s1+V[b+1],t2=s2+V[b+2],t3=s3+V[b+3],t4=s4+V[b+4];
+    for(let l=j+1;l<n;l++){if(P[l]==P[i]||P[l]==P[j]||(U&&(Q[l]==Q[i]||Q[l]==Q[j])))continue;const d=l*5,u0=t0+V[d],u1=t1+V[d+1],u2=t2+V[d+2],u3=t3+V[d+3],u4=t4+V[d+4];
+     for(let m=l+1;m<n;m++){if(P[m]==P[i]||P[m]==P[j]||P[m]==P[l]||(U&&(Q[m]==Q[i]||Q[m]==Q[j]||Q[m]==Q[l])))continue;const e=m*5;
+      const q=sc(u0+V[e],u1+V[e+1],u2+V[e+2],u3+V[e+3],u4+V[e+4]);
+      if(q<bC){if(q<bB){if(q<bA){bC=bB;jC=jB;lC=lB;mC=mB;bB=bA;jB=jA;lB=lA;mB=mA;bA=q;jA=j;lA=l;mA=m}else{bC=bB;jC=jB;lC=lB;mC=mB;bB=q;jB=j;lB=l;mB=m}}else{bC=q;jC=j;lC=l;mC=m}}
+      if(needExp&&q<thr4){s4a.push([q,i,j,l,m]);if(s4a.length>DW*20)trim4()}}}}
+   if(bA<Infinity)upd(4,bA,[i,jA,lA,mA]);if(bB<Infinity)upd(4,bB,[i,jB,lB,mB]);if(bC<Infinity)upd(4,bC,[i,jC,lC,mC])};
+  for(let i=0;i<n;i++){await chk('חיפוש מלא ל-4 נקודות '+Math.round(i*100/n)+'%');(U?rowFu:rowF)(i)}}
+
+ let ext=null;
+ const okAny=sc(c0,c1,c2,c3,c4)<PEN||[1,2,3,4].some(k=>B[k]&&B[k].s<PEN);
+ if(auto&&M>=4&&!okAny){
+  const W=DW,KMAX=Math.min(12,pc);
+  s4a.sort((x,y)=>x[0]-y[0]);if(B[4])s4a.unshift([B[4].s].concat(B[4].idx));
+  const mk=idx=>{const c=cur.slice();idx.forEach(x=>{for(let d=0;d<5;d++)c[d]+=V[x*5+d]});return{idx,c,s:sc(c[0],c[1],c[2],c[3],c[4])}};
+  let states=[],seen=new Set();
+  for(const a of s4a){const idx=a.slice(1),key=idx.slice().sort((x,y)=>x-y).join();if(seen.has(key))continue;seen.add(key);states.push(mk(idx));if(states.length>=W)break}
+  let lvl=0,lb=null,tried=0;
+  for(let k=5;k<=KMAX&&states.length;k++){
+   const cand=[];let th=Infinity;
+   for(let si=0;si<states.length;si++){await chk('הרחבה ל-'+k+' נקודות');const st=states[si];const used=st.idx.map(x=>P[x]),usedQ=st.idx.map(x=>Q[x]),c=st.c;
+    for(let m=0;m<n;m++){if(used.includes(P[m])||(U&&usedQ.includes(Q[m])))continue;const e=m*5;
+     const q=sc(c[0]+V[e],c[1]+V[e+1],c[2]+V[e+2],c[3]+V[e+3],c[4]+V[e+4]);
+     if(q<th){cand.push([q,si,m]);if(cand.length>DW*27){cand.sort((x,y)=>x[0]-y[0]);cand.length=W;th=cand[W-1][0]}}}}
+   cand.sort((x,y)=>x[0]-y[0]);
+   const ns=[],sn=new Set();
+   for(const a of cand){const idx=states[a[1]].idx.concat(a[2]),key=idx.slice().sort((x,y)=>x-y).join();if(sn.has(key))continue;sn.add(key);ns.push(mk(idx));if(ns.length>=W)break}
+   if(!ns.length)break;
+   states=ns;tried=k;if(!lb||ns[0].s<lb.s){lb=ns[0];lvl=k}
+   if(ns[0].s<PEN)break}
+  if(lb)ext={k:lvl,s:lb.s,idx:lb.idx,c:lb.c,tried}}
+ const opts=[{k:0,s:sc(...cur),idx:[],c:cur}];
+ for(let k=1;k<=M;k++)if(B[k]){const c=cur.slice();B[k].idx.forEach(x=>{for(let d=0;d<5;d++)c[d]+=V[x*5+d]});opts.push({k,s:B[k].s,idx:B[k].idx,c,alts:(ALT[k]||[]).slice(1,3).filter(a=>a.s<opts[0].s).map(a=>{const c2=cur.slice();a.idx.forEach(x=>{for(let d=0;d<5;d++)c2[d]+=V[x*5+d]});return{s:a.s,idx:a.idx,c:c2}})})}
+ if(ext&&ext.s<Math.min(...opts.map(o=>o.s)))opts.push({k:ext.k,s:ext.s,idx:ext.idx,c:ext.c});
+ const best=opts.reduce((a,b)=>b.s<a.s?b:a);
+ if(PROJ===2&&!allowLate&&!$('late').checked&&!best.c.every((x,i)=>Math.abs(x)<=TL[i])&&ALL.some(r=>r.late&&!(r.est&&!$('est').checked)&&!occ.has(PK(r))))return run(true);
+ const xtWarn=(()=>{if(PROJ!==2)return '';const f=flagsNow();if(!(f.iXt&&f.oXt))return '';const d=cur[3]-cur[0]-cur[4],lim=TL[0]+TL[3]+TL[4];
+  if(Math.abs(d)<=lim)return '';return '<div class="card warn"><b>הערכים סותרים את Xtot = Xin + Xout</b><br>Xtot פחות Xin פחות Xout הוא <bdi dir="ltr">'+fmt(d)+'</bdi>. כל תוספת מזיזה את Xtot ואת Xin (או Xout) באותה כמות, ולכן הפער הזה לא משתנה באף התקנה. כדי שכל הערכים יהיו בטולרנס הוא צריך להיות עד <bdi dir="ltr">'+lim+'</bdi>. לכן ייתכן שלא יימצא פתרון בטולרנס. בדוק את המדידה, או אם Xtot אינו סכום של Xin ו-Xout במכשיר.</div>';})();
+ LAST=best.k>0?{cur:cur.slice(),rows:best.idx.map(x=>list[x].r),flags:flagsNow()}:null;
+ const altHtml=o=>!(o.alts&&o.alts.length)?'':'<details class="alts"><summary>חלופות ('+o.alts.length+')</summary>'+o.alts.map((a,n)=>'<div class="alt"><div class="tag">חלופה '+(n+1)+'</div>'+a.idx.map(x=>'<div class="alt-ins">'+instr(list[x])+'</div>').join('')+'<div class="altv">'+a.c.map((x,i)=>'<span style="'+(Math.abs(x)>TL[i]?'color:var(--bad)':'')+'">'+NM[i]+' <bdi dir="ltr">'+fmt(x)+'</bdi></span>').join(' · ')+'</div></div>').join('')+'</details>';
+ let h=(allowLate&&PROJ===2&&!$('late').checked?'<div class="card warn"><b>נעשה שימוש גם בתוספות 8 ו-9</b><br>בלעדיהן לא נמצאה אפשרות שמביאה את כל הערכים לטולרנס, ולכן הן נוספו כמוצא אחרון.</div>':'')+(occ.size?'<div class="tag">נקודות תפוסות שלא נכללו בחישוב: '+occ.size+'</div>':'')+warnHtml+`<div class="card"><b>ערכים נוכחיים</b>${vals(cur,TL)}</div>`+xtWarn+(ext?`<div class="card"><b>${ext.s<PEN?'הורחב אוטומטית ל-'+ext.k+' נקודות':'הורחב אוטומטית עד '+ext.tried+' נקודות'}</b><br>${ext.s<PEN?(full4?'עם 4 נקודות לא קיים פתרון בטולרנס (חיפוש מלא). ':'עם 4 נקודות לא נמצא טולרנס (החיפוש מקורב). ')+'עם '+ext.k+' נקודות כל הערכים בטולרנס (חיפוש מקורב).':'גם בהרחבה עד '+ext.tried+' נקודות לא נמצא טולרנס מלא. החיפוש מעל 4 נקודות מקורב'+(full4?' (ל-4 נקודות החיפוש היה מלא)':'')+', ולכן ייתכן שקיים פתרון שלא נבדק. מוצגת האפשרות הקרובה ביותר לאפס שנמצאה. ייתכן גם שיש יותר מדי נקודות תפוסות.'}</div>`:'');
+ opts.filter(o=>o.k>0&&o.s<opts[0].s).sort((a,b)=>a===best?-1:b===best?1:a.k-b.k).forEach(o=>{const okAll=o.c.every((x,i)=>Math.abs(x)<=TL[i]);
+  h+=`<div class="card${o===best?' best':''}"><b>אפשרות עם ${o.k} ${o.k===1?'תוספת':'תוספות'}</b>${okAll?'<span class="badge ok">הכול בטולרנס</span>':'<span class="badge bad">יש חריגה</span>'}${o===best?'<span class="badge ok">'+((o.k>=5||(o.k===4&&!full4))?'★ הטובה ביותר שנמצאה':'★ הטובה ביותר · הקרובה לאפס')+'</span>':''}${(o.k>=5||(o.k===4&&!full4))?'<span class="badge tag">חיפוש מקורב</span>':(o.k===4?'<span class="badge tag">חיפוש מלא</span>':'')}`+
+  o.idx.map((x,i)=>`<div class="ins">${i+1}. ${instr(list[x])}</div>`).join('')+`<b>צפי אחרי תיקון</b>${vals(o.c,TL)}<span class="tag">סטייה כוללת (סכום ריבועים, קטן יותר = קרוב יותר לאפס): ${Math.round(o.c.reduce((a,x)=>a+x*x,0))}</span>${altHtml(o)}</div>`});
+ if(pc<(auto?5:M)&&best.s>=PEN)h+='<div class="card warn"><b>נשארו רק '+pc+(pc===1?' נקודה פנויה':' נקודות פנויות')+'</b><br>לכן אי אפשר להוסיף יותר מ-'+pc+(pc===1?' תוספת':' תוספות')+'. ביטול סימון של נקודות תפוסות יאפשר עוד אפשרויות.</div>';
+ if(opts.some(o=>(o.k>=5||(o.k===4&&!full4))&&o.s<opts[0].s))h+='<p class="tag">'+(full4?'אפשרויות עם 5 נקודות ומעלה':'אפשרויות עם 4 נקודות ומעלה')+' מחושבות בחיפוש מקורב, ולא מובטח שהן האופטימליות.</p>';
+ if(best.k==0){const allOk=cur.every((x,i)=>Math.abs(x)<=TL[i]);h+=allOk?'<div class="card"><b>אין צורך בתוספות</b><br>כל הערכים בטולרנס, ולא נמצאה אפשרות שתקרב אותם לאפס יותר.</div>':'<div class="card warn"><b>לא נמצאה אפשרות שמשפרת</b><br>הערכים עדיין מחוץ לטולרנס, אך אף שילוב שנבדק לא משפר את המצב. כדאי לבדוק את הנתונים שהוזנו, נקודות תפוסות ואת מספר התוספות המותר.</div>'}
+ if(LAST)h+='<div class="card" id="vcard"><b>אימות התחזית אחרי ההתקנה</b><div class="tag">התקן את האפשרות המוארת, מדוד במכשיר והזן כאן את הערכים שהתקבלו. האפליקציה תשווה לתחזית ותבדוק אם ההנחות (סימן, מיפוי) נכונות.</div><div class="g">'+NM.map((k,i)=>'<div><label for="af'+i+'">'+k+'</label><input type="text" dir="ltr" inputmode="decimal" autocomplete="off" id="af'+i+'"></div>').join('')+'</div><button id="vgo" class="mini" style="width:100%;margin-top:8px">השווה לתחזית</button><div id="vout"></div></div>';
+ $('out').innerHTML=h;if(LAST)$('vgo').onclick=verifyPrediction}
+function tbl(rows,isIn){return `<div class="sc"><table><tr><th>תוספת</th><th>מחבר</th><th>X</th>${isIn?'<th>Y</th><th>Z</th>':'<th>Z</th>'}</tr>`+rows.map(r=>`<tr><td>${r.w}${r.sp?' *':''}${r.est?' ~':''}</td><td>${r.b}</td>${r.e.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')+'</table></div>'}
+function buildHelp2(){
+ const g2=groupBy(I2),o2=groupBy(OU2),nEst=I2.filter(r=>r.est).length;
+ let h=`<b>הסבר מלא · פרויקט ה</b>
+<h3>שני פרויקטים</h3><p>באפליקציה שני פרויקטים של התאמת מנגנון, כל אחד עם טבלאות וטולרנסים משלו: <b>ד</b> (טולרנס ±70) ו-<b>ה</b> (טולרנס ±50, ו-±100 ל-Xout). עוברים ביניהם בכפתורים "ד" ו-"ה" בכותרת. אין שום קשר ביניהם: הטבלאות, ההגדרות והנקודות התפוסות נפרדים, ושדות הקלט מתרוקנים בכל מעבר. הכפתור המסומן בכחול הוא הפרויקט הפעיל, ושמו מופיע ליד הכותרת. כאן מוצג ההסבר של פרויקט ה.</p>
+<h3>מה</h3><p>האפליקציה מחשבת אילו תוספות, עם אילו מחברים ובאילו מיקומים להתקין במנגנון הפנימי (Inner) ובחיצוני (Outer), כדי שחמשת ערכי המכשיר (Xin, Y, Z, Xtot, Xout) יגיעו לטולרנס וקרוב ככל האפשר לאפס.</p>
+<h3>טולרנסים בפרויקט ה</h3><ul><li>Xin, Y, Z, Xtot: ±50.</li><li>Xout: ±100.</li><li>ערך בתוך הטולרנס מוצג בירוק. מחוץ לו הוא אדום, עם גודל החריגה לידו. אפשר לשנות את הטולרנסים בהגדרות.</li></ul>
+<h3>שימוש מהיר</h3><ol><li>הזן את 5 הערכים מהמכשיר (Enter עובר לשדה הבא). מינוס מותר בתחילת או בסוף המספר, או בכפתור ±. נקודה או פסיק כסימן עשרוני. שדה לא תקין מודגש באדום ולא מחושב. שדה ריק נחשב 0, ומוצגת על כך אזהרה.</li><li>אם יש נקודות שכבר תפוסות במחבר ותוספת, סמן אותן ב"נקודות תפוסות".</li><li>לחץ "חשב".</li><li>בצע את האפשרות המוארת (★) שמופיעה ראשונה: התקן את המחבר והתוספת שכתובים, במיקום שכתוב.</li><li>מדוד שוב במכשיר. מדידה חוזרת היא האימות האמיתי. אפשר להזין אותה בכרטיס "אימות התחזית".</li></ol>
+<h3>מי</h3><ul><li><b>אתה</b>: מזין את הערכים מהמכשיר ומסמן נקודות תפוסות.</li><li><b>הטבלאות</b>: ההשפעה של כל שילוב מיקום + מחבר + תוספת. Inner משפיע על X, Y, Z. Outer משפיע על X ו-Z בלבד.</li><li><b>האלגוריתם</b>: בודק שילובים ובוחר את הטוב ביותר.</li></ul>
+<h3>כמה</h3><ul><li>${I2.length} שורות Inner ב-${Object.keys(g2).length} מיקומים (M1–M4, M14–M16, M20–M23, M30–M34, M41–M42, M56–M57, M70–M74), מהן ${nEst} שורות משוערות.</li><li>${OU2.length} שורות Outer ב-${Object.keys(o2).length} מיקומים (M60, M63, M64, M67).</li><li>נקודות: מוצגת אפשרות לכל מספר מ-1 עד 4. אם אף אחת לא מגיעה לטולרנס, מתווספת נקודה בכל שלב (5, 6, … עד 12) עד שכל הערכים בטולרנס.</li></ul>
+<h3>למה</h3><p>המטרה אינה רק לעבור את הסף: אחרי שכל הערכים בטווח, האפליקציה מעדיפה את השילוב הקרוב ביותר לאפס. אם 4 נקודות לא מספיקות, היא מוסיפה נקודות אוטומטית עד שמתקבל טולרנס.</p>
+<h3>איפה</h3><p>כל מיקום (M…) הוא נקודת התקנה על המנגנון, לפי התרשים שעל טבלת המקור. מחבר אחד בכל מיקום. נקודה תפוסה (מסומנת על ידך) לא נכנסת לחישוב. הטבלאות המלאות בסוף ההסבר.</p>
+<h3>איך מתבצע החישוב</h3><ol><li>קוראים את 5 הערכים (שדה ריק = 0).</li><li>לכל שורה בטבלה בונים וקטור השפעה על [Xin, Y, Z, Xtot, Xout]. X של Inner משפיע על Xin ועל Xtot. X של Outer משפיע על Xout ועל Xtot. Z של Outer משפיע על Z.</li><li>ערך חזוי = ערך נוכחי + סכום ההשפעות של התוספות שנבחרו.</li><li>1, 2 ו-3 נקודות: חיפוש מלא של כל השילובים, במיקומים שונים בלבד. 4 נקודות: חיפוש מקורב כברירת מחדל, או מלא אם סימנת בהגדרות. מעל 4: הרחבה אוטומטית (חיפוש מקורב) עד שכל הערכים בטולרנס או עד 12 נקודות.</li><li>תוספות 8 ו-9 לא נכללות בחישוב הראשון. רק אם בלעדיהן אין אפשרות שמביאה הכול לטולרנס, החישוב חוזר עם 8 ו-9 ומוצגת על כך הודעה.</li><li>דירוג: קודם מספר הערכים החורגים (פחות = טוב), ואז סכום ריבועי הערכים (קטן = קרוב יותר לאפס). הסכום אינו מתחשב בכך שהטולרנס של Xout גדול פי 2 משאר הערכים.</li><li>האפשרות הטובה ביותר מוצגת ראשונה, מוארת.</li></ol>
+<h3>תוספות משוערות ותוספות חסרות</h3><ul><li>בטבלאות M1–M4 במקורות יש רק תוספות 1–3. תוספות 4–9 שם <b>אינן מהטבלה</b>: חישבתי אותן בהתאמה ליניארית (ריבועים פחותים) של תוספות 1–3 לפי סדרת הגדלים של M20 (X), ובתוספת 7 באינטרפולציה בין 6 ל-8. בנקודות הידועות (1–3) ההתאמה סוטה עד יחידה אחת. אין אימות לערכים 4–9.</li><li>שורות משוערות מסומנות ב-~ בטבלאות ובתוצאות כ"ערך משוער". אפשר לכבות אותן בהגדרות ("השתמש בערכים משוערים").</li><li>תוספת 7 אינה מופיעה באף טבלה של פרויקט ה במקורות. אורך המחבר שלה, 1/2", הוסק מפרויקט ד: בכל הטבלאות המשותפות שם המחברים של תוספות 1–6, 8, 9 זהים לאלה של ה (3/16, 3/16, 1/4, 5/16, 5/16, 3/8, 1/2, 1/2), ובפרויקט ד תוספת 7 היא 1/2". זו הסקה ולא נתון מהטבלה של ה, ולכן כדאי לוודא מול התוספת הפיזית.</li><li>בשאר הטבלאות יש תוספות 1–6, 8, 9 בלבד. M14–M16: תוספות 1–3 בלבד. M22 ו-M23: תוספת 1 בלבד, כפי שמופיע בצילום.</li><li>שורות DEFAULT (M30–M32, מסומנות ב-*): משמעות לא ידועה, כבויות כברירת מחדל. מפעילים בהגדרות.</li></ul>
+<h3>איך לקרוא את התוצאה</h3><ul><li><b>ערכים נוכחיים</b>: מה שהזנת, ירוק או אדום.</li><li><b>כרטיס אפשרות</b>: רשימת הוראות (מיקום, מחבר, תוספת) ומתחתיה "צפי אחרי תיקון" עם 5 הערכים החזויים.</li><li><b>הכול בטולרנס / יש חריגה</b>: האם האפשרות מביאה את כל הערכים לטווח.</li><li><b>★ הטובה ביותר</b>: הקרובה ביותר לאפס. מוארת ומוצגת ראשונה.</li><li><b>חיפוש מקורב</b>: 4 נקודות ומעלה. ייתכן שקיים שילוב טוב יותר שלא נבדק.</li><li><b>הורחב אוטומטית</b>: נדרשו יותר מ-4 נקודות.</li><li><b>נעשה שימוש גם בתוספות 8 ו-9</b>: בלעדיהן לא נמצא פתרון בטולרנס.</li><li><b>הערכים סותרים את Xtot = Xin + Xout</b>: אזהרה שמופיעה כשהפער Xtot פחות Xin פחות Xout גדול מסכום הטולרנסים (200). אף התקנה לא משנה את הפער הזה, ולכן אי אפשר להביא את כל הערכים לטולרנס. בדוק את המדידה. האזהרה לא מופיעה אם כיבית את מיפוי Xtot של Inner או של Outer.</li><li><b>חלופות</b>: עד שתי חלופות קרובות לאפשרויות עם עד 4 נקודות.</li><li><b>אימות התחזית</b>: אחרי ההתקנה הזן את המדידה החדשה. האפליקציה משווה לתחזית ובודקת אם הגדרה אחרת (היפוך סימן, מיפוי Xtot או Z של Outer) מסבירה אותה. "השתמש במדידה כערכים נוכחיים" ממשיך את ההתאמה מהמצב שנמדד.</li><li><b>"אין צורך בתוספות"</b>: כל הערכים בטולרנס ואין שיפור אפשרי. <b>"לא נמצאה אפשרות שמשפרת"</b>: יש חריגה ואף שילוב לא משפר. <b>"נשארו רק N נקודות פנויות"</b>: אין מקום להוסיף עוד.</li></ul>
+<h3>כפתורים ושדות</h3><ul><li><b>ד / ה</b> (בכותרת): מעבר בין הפרויקטים.</li><li><b>חשב</b>: מריץ את החיפוש. בזמן החישוב הוא הופך ל"בטל חישוב". ההגדרות והשדות נעולים עד הסיום, וגם מעבר בין פרויקטים לא אפשרי.</li><li><b>נקה הכל</b>: מנקה את 5 השדות ואת התוצאות (לא את הנקודות התפוסות).</li><li><b>±</b>: הופך את סימן הערך בשדה הפעיל.</li><li><b>ערכת נושא</b>: אוטו, בהיר או כהה.</li><li><b>מקסימום תוספות</b>: 1–4 קבוע, או "עד טולרנס" (ברירת מחדל).</li><li><b>טולרנסים</b>: Xin, Y, Z, Xtot ו-Xout בנפרד. ריק = ברירת המחדל (50 ו-100). מספר מ-0 ומעלה.</li><li><b>תוספות משוערות</b>: מדליק או מכבה את שורות M1–M4 המשוערות.</li><li><b>אפשר תוספות 8 ו-9 מההתחלה</b>: ברירת מחדל כבוי.</li><li><b>כל תוספת פעם אחת בלבד</b>: מונע הצעה של אותו סוג בשני מקומות.</li><li><b>הפוך סימן</b>, <b>Z של Outer על Z</b>, <b>X של Inner/Outer על Xtot</b>, <b>כיול Inner→Xout</b>: הנחות מיפוי. משנים רק לפי מדידה.</li><li><b>חיפוש מעמיק / חיפוש מלא ל-4 נקודות</b>: מדויק יותר ואיטי יותר.</li><li><b>אפס הגדרות</b>: מחזיר את הפרויקט הפעיל לברירות המחדל, כולל הנקודות התפוסות כברירת מחדל (M30–M32, M70–M74).</li><li>ההגדרות והנקודות התפוסות נשמרות במכשיר בנפרד לכל פרויקט. ערכי המדידה לא נשמרים.</li></ul>
+<h3>נקודות תפוסות</h3><ul><li>אם בנקודות מסוימות כבר יש מחבר ותוספת, פתח "נקודות תפוסות" וסמן אותן.</li><li>נקודה תפוסה לא נכנסת לחישוב בכלל.</li><li>בפרויקט זה הנקודות M30–M32 ו-M70–M74 תפוסות כברירת מחדל. לחיצה על נקודה משחררת אותה, וההחלטה נשמרת.</li><li>הסימון נשמר עד שתנקה אותו, בנפרד לכל פרויקט.</li></ul>
+<h3>הנחות ומגבלות</h3><ul><li>Xtot = Xin + Xout, ו-Outer משפיע על X ו-Z בלבד: כך הוגדר על ידך.</li><li>החיבור הפשוט (ערך חזוי = נוכחי + השפעה) והיחידות הם הנחות. מדידה חוזרת במכשיר היא האימות האמיתי.</li><li>תוספות 8 ו-9 כמוצא אחרון: פרשנות שלי להנחיה שלך.</li><li>הערכים בטבלאות נקראו ממקורות. ב-M32 הערכים של תוספת 8, תוספת 9 ו-DEFAULT_1 מטושטשים מעט בצילום.</li><li>אין מעקב כמויות: האפליקציה מניחה שיש מספיק תוספות ומחברים מכל סוג.</li><li>התוצאה היא חיזוי בלבד.</li></ul>
+<h3>הטבלאות המלאות</h3><p class="tag">Inner: תוספת, מחבר, X, Y, Z. Outer: תוספת, מחבר, X, Z. * = DEFAULT. ~ = משוער.</p><b>Inner</b>`;
+ for(const p in g2)h+=`<details><summary>${p}</summary>${tbl(g2[p],true)}</details>`;
+ h+='<b>Outer</b>';
+ for(const p in o2)h+=`<details><summary>${p}</summary>${tbl(o2[p],false)}</details>`;
+ $('help').innerHTML=h}
+function groupBy(a){const g={};a.forEach(r=>(g[r.p]=g[r.p]||[]).push(r));return g}
+function buildHelp(){
+ if(PROJ===2)return buildHelp2();
+ const gi=groupBy(I),go=groupBy(OU);
+ let h=`<b>הסבר מלא · פרויקט ד</b>
+<h3>שני פרויקטים</h3><p>באפליקציה שני פרויקטים של התאמת מנגנון, כל אחד עם טבלאות וטולרנסים משלו: <b>ד</b> (טולרנס ±70) ו-<b>ה</b> (טולרנס ±50, ו-±100 ל-Xout). עוברים ביניהם בכפתורים "ד" ו-"ה" בכותרת. אין שום קשר ביניהם: הטבלאות, ההגדרות והנקודות התפוסות נפרדים, ושדות הקלט מתרוקנים בכל מעבר. הכפתור המסומן בכחול הוא הפרויקט הפעיל, ושמו מופיע ליד הכותרת.</p>
+<h3>מה</h3><p>האפליקציה מחשבת אילו תוספות, עם אילו מחברים ובאילו מיקומים להתקין במנגנון הפנימי (Inner) ובחיצוני (Outer), כדי שחמשת ערכי המכשיר (Xin, Y, Z, Xtotal, Xout) יגיעו לטולרנס ±70, וקרוב ככל האפשר לאפס.</p>
+<h3>שימוש מהיר</h3><ol><li>הזן את 5 הערכים מהמכשיר (Enter עובר לשדה הבא). מינוס מותר בתחילת או בסוף המספר. נקודה או פסיק כסימן עשרוני. פסיק עם 3 ספרות אחריו (כמו 1,234) נדחה כעמום: כתוב 1.234. מפריד אלפים מותר רק בפורמט תקין (1,234.5). רווח בתוך מספר נדחה. שדה לא תקין (אותיות, 1e3, מינוס באמצע, יותר מנקודה, מעל 10000) מודגש באדום ולא מחושב. שדות ריקים נחשבים 0, ומוצגת על כך אזהרה.</li><li>אם יש נקודות שכבר תפוסות במחבר ותוספת, סמן אותן ב"נקודות תפוסות".</li><li>לחץ "חשב".</li><li>בצע את האפשרות המוארת (★) שמופיעה ראשונה: התקן את המחבר והתוספת שכתובים, במיקום שכתוב.</li><li>מדוד שוב במכשיר. מדידה חוזרת היא האימות האמיתי.</li></ol>
+<h3>מי</h3><ul><li><b>אתה</b>: מזין את הערכים מהמכשיר ומסמן נקודות תפוסות.</li><li><b>הטבלאות</b>: ההשפעה של כל שילוב מיקום + מחבר + תוספת על הערכים (Inner: X, Y, Z. Outer: X, Z).</li><li><b>האלגוריתם</b>: בודק שילובים ובוחר את הטוב ביותר.</li></ul>
+<h3>למה</h3><p>ערך בין -70 ל-70 תקין (ירוק). מחוץ לטווח הוא אדום, עם החריגה לידו. המטרה אינה רק לעבור את הסף: אחרי שכולם בטווח, האפליקציה מעדיפה את השילוב שהכי קרוב לאפס. אם 4 נקודות לא מספיקות, היא מוסיפה נקודות אוטומטית עד שמתקבל טולרנס.</p>
+<h3>כמה</h3><ul><li>${I.length} שורות Inner ב-${Object.keys(gi).length} מיקומים (M1–M3, M20–M26, M30–M37, M40–M42, M50–M52).</li><li>${OU.length} שורות Outer ב-${Object.keys(go).length} מיקומים (M60–M67).</li><li>נקודות: מוצגת אפשרות לכל מספר מ-1 עד 4. אם אף אחת לא מגיעה לטולרנס, מתווספת נקודה בכל שלב (5, 6, … עד 12) עד שכל הערכים בטולרנס.</li><li>טולרנס: ±70 (ניתן לשינוי בהגדרות).</li></ul>
+<h3>איפה</h3><p>כל מיקום (M…) הוא נקודת התקנה על המנגנון, לפי התרשים שעל טבלת המקור. מחבר אחד בכל מיקום. נקודה תפוסה (מסומנת על ידך) לא נכנסת לחישוב. הטבלאות המלאות בסוף ההסבר.</p>
+<h3>איך מתבצע החישוב</h3><ol><li>קוראים את 5 הערכים (שדה ריק = 0).</li><li>לכל שורה בטבלה בונים וקטור השפעה על [Xin, Y, Z, Xtotal, Xout].</li><li>ערך חזוי = ערך נוכחי + סכום ההשפעות של התוספות שנבחרו.</li><li>1, 2 ו-3 נקודות: חיפוש מלא של כל השילובים, במיקומים שונים בלבד.</li><li>4 נקודות: כברירת מחדל חיפוש מקורב (הרחבת 5,000 השלשות הטובות ביותר, ושילוב 500 הזוגות הטובים ביותר עם כל זוג). בהגדרות אפשר לסמן "חיפוש מלא ל-4 נקודות": בודק את כל השילובים, לוקח כ-3 שניות במחשב, ו-15 עד 20 שניות ויותר בטלפון איטי, וניתן לבטל. נבדק מול חיפוש כוח-גס עצמאי.</li><li>אם אף אפשרות עד 4 לא בטולרנס: הרחבה אוטומטית ל-5, 6, … (חיפוש מקורב, 1,500 המועמדים הטובים בכל שלב) עד שכל הערכים בטולרנס או עד 12 נקודות.</li><li>דירוג: קודם מספר הערכים החורגים (פחות = טוב), ואז סכום ריבועי הערכים (קטן = קרוב יותר לאפס).</li><li>האפשרות הטובה ביותר מוצגת ראשונה, מוארת.</li></ol>
+<p><b>דוגמה:</b> Xin=100, Xtotal=90. תוספת 3.0 ב-M3 משפיעה X=-64. אחרי: Xin=36, Xtotal=26 (עם ההנחה ש-X של Inner משפיע גם על Xtotal).</p>
+<h3>איך לקרוא את התוצאה</h3><ul><li><b>ערכים נוכחיים</b>: מה שהזנת, ירוק או אדום.</li><li><b>כרטיס אפשרות</b>: רשימת הוראות, למשל "התקן: Inner · מיקום M2 · מחבר 1/2 · תוספת 8", ומתחתיה "צפי אחרי תיקון" עם 5 הערכים החזויים.</li><li><b>הכול בטולרנס / יש חריגה</b>: האם האפשרות מביאה את כל הערכים לטווח.</li><li><b>★ הטובה ביותר</b>: הקרובה ביותר לאפס. מוארת ומוצגת ראשונה.</li><li><b>חיפוש מקורב</b>: 4 נקודות ומעלה. ייתכן שקיים שילוב טוב יותר שלא נבדק.</li><li><b>הורחב אוטומטית</b>: הודעה שמופיעה כשנדרשו יותר מ-4 נקודות. אם גם 12 לא הספיקו, מוצגת האפשרות הקרובה ביותר, ואז כדאי לבדוק אם יש יותר מדי נקודות תפוסות.</li><li><b>חלופות</b>: מתחת לאפשרויות עם עד 4 נקודות יש עד שתי חלופות קרובות (שילובים אחרים עם תוצאה קרובה), אם קיימות.</li><li><b>אימות התחזית</b>: אחרי שהתקנת את האפשרות המוארת, הזן בכרטיס "אימות התחזית אחרי ההתקנה" את המדידה החדשה מהמכשיר. האפליקציה משווה לתחזית, ואם יש פער היא בודקת אם הגדרה אחרת (היפוך סימן, מיפוי Xtotal או Z של Outer) מסבירה את המדידה, ומציעה להחיל אותה. אם הורכבו רק חלק מהתוספות, היא מזהה איזו קבוצה מסבירה את המדידה. היא מציגה גם את ההתאמה הטובה ביותר בכל הטבלה (תוספת בודדת או זוג), למקרה שהורכב משהו אחר מהמוצע. הכפתור "השתמש במדידה כערכים נוכחיים" ממשיך את ההתאמה מהמצב שנמדד.</li><li><b>שורה מוצללת בטבלה</b>: תוספת 7 ב-Outer מוצללת בטבלה המקורית וקריאה חלקית. כשהיא מוצעת מופיע סימון, ומומלץ לוודא מול טבלת המקור.</li><li><b>הודעות</b>: "אין צורך בתוספות" = כל הערכים בטולרנס ואין שיפור אפשרי. "לא נמצאה אפשרות שמשפרת" = הערכים עדיין מחוץ לטולרנס ואף שילוב לא משפר (בדוק את הנתונים, נקודות תפוסות או הגדל את מספר התוספות). "קלט לא תקין" = שדה מודגש באדום. "אין נקודות פנויות" = כל הנקודות מסומנות כתפוסות. "נשארו רק N נקודות פנויות" = מספר הנקודות הפנויות קטן ממספר התוספות שביקשת, ולכן אי אפשר להוסיף עוד. "שגיאה בחישוב" ו"החישוב בוטל" מוסברות על המסך.</li></ul>
+<h3>כפתורים ושדות</h3><ul><li><b>חשב</b>: מריץ את החיפוש. בזמן החישוב הכפתור הופך ל"בטל חישוב" ומציג את השלב; לחיצה עליו מבטלת. הממשק נשאר פעיל במהלך החישוב, והשדות וההגדרות נעולים עד סיום החישוב או הביטול.</li><li><b>נקה הכל</b>: מנקה את 5 השדות ואת התוצאות (לא את הנקודות התפוסות).</li><li><b>±</b>: הופך את סימן הערך בשדה הפעיל (המקלדת העשרונית לא תמיד מציגה מינוס).</li><li><b>ערכת נושא</b> (בכותרת): אוטו לפי המכשיר, בהיר או כהה.</li><li><b>שמירה</b>: ההגדרות והנקודות התפוסות נשמרות במכשיר. ערכי המדידה לא נשמרים. "אפס הגדרות" (בהגדרות) מחזיר הכול לברירת מחדל.</li><li><b>חיפוש מעמיק להרחבה</b> (בהגדרות): בהרחבה מעל 4 נקודות בודק יותר מועמדים בכל שלב. איטי יותר, ומקטין את הסיכון לפספס פתרון, אך עדיין אינו חיפוש מלא.</li><li><b>כיול: קישור Inner→Xout</b> (בהגדרות): ברירת מחדל 0. מוסיף ל-Xout (ולכן גם ל-Xtotal) חלק יחסי מ-X של תוספת ב-Inner. כרטיס האימות מציע ערך כשהמדידה מראה ש-Xout זז בלי תוספת ב-Outer. מחילים רק אחרי אימות במדידה נוספת.</li><li><b>כל תוספת פעם אחת בלבד</b> (בהגדרות): מונע הצעה של אותו סוג בשני מקומות. מתאים אם יש לך תוספת אחת מכל סוג.</li><li><b>Enter</b>: מעבר לשדה הבא. בשדה האחרון סוגר את המקלדת. החישוב מתבצע רק בלחיצה על "חשב".</li><li><b>הסבר מלא</b>: פותח וסוגר את ההסבר הזה.</li><li><b>נקודות תפוסות</b>: רשימת סימון של כל המיקומים. <b>נקה תפוסות</b> מוחק את הסימונים (הם נשמרים במכשיר עד שתנקה אותם).</li><li><b>מקסימום תוספות</b>: 1–4 קבוע, או "עד טולרנס" (ברירת מחדל) שמרחיב אוטומטית מעבר ל-4.</li><li><b>טולרנס</b>: הסף לירוק/אדום. מספר מ-0 ומעלה. ריק = 70. ערך שלילי או לא מספרי נדחה עם הודעה.</li><li><b>Z של Outer משפיע על Z</b>, <b>X של Inner/Outer משפיע גם על Xtotal</b>: מיפוי ההשפעות. בטל אם אצלך זה שונה.</li><li><b>הפוך סימן</b>: אם בפועל הוספת תוספת מורידה את הערך.</li><li><b>תוספות מיוחדות d/t</b>: שורות 25–32 של M3 (מסומנות ב-*), כבויות כברירת מחדל.</li></ul>
+<h3>נקודות תפוסות</h3><ul><li>אם בנקודות מסוימות כבר יש מחבר ותוספת, פתח "נקודות תפוסות" וסמן אותן.</li><li>נקודה תפוסה לא נכנסת לחישוב בכלל, ולא משנה איזה מחבר ואיזו תוספת יש בה.</li><li>הסימון נשמר במכשיר עד שתנקה אותו ("נקה תפוסות" או "אפס הגדרות"). מספר הנקודות התפוסות מוצג מתחת לכפתורים ובראש התוצאות.</li><li>ככל שיש יותר נקודות תפוסות יש פחות מקום לתיקון, ולכן כדאי לסמן רק נקודות שאי אפשר לפנות.</li></ul>
+<h3>הנחות ומגבלות</h3><ul><li>Xtotal = Xin + Xout: נראה מתאים לנתוני המכשיר שהזנת (‎-84.64 + ‎-12.93 = ‎-97.57), אבל זו הנחה ולא נתון מהטבלה.</li><li>החיבור הפשוט (ערך חזוי = נוכחי + השפעה), והמיפוי של X/Y/Z לחמשת הערכים, הם הנחות שלי.</li><li>הנחה: יחידות הטבלה זהות ליחידות המכשיר.</li><li>שורות תוספת 7 המוצללות ב-Outer (212, 221, 230, 239, 248, 257, 266, 275) קריאות חלקית במקור (33, 62/119) ותואמות את הדפוס.</li><li>אורכי המחבר ב-M4x/M5x נחתכו במקור, קריאים חלקית (למשל 3/1, 5/1, 1/2) ותואמים את שאר הטבלאות.</li><li>אין מעקב כמויות מלא: ברירת המחדל מניחה שיש מספיק תוספות ומחברים מכל סוג. האפשרות "כל תוספת פעם אחת בלבד" מונעת כפילות סוג, אבל אינה בודקת כמה יחידות יש לך מכל סוג.</li><li>כל 277 השורות (X, Y, Z, מחברים, תוספות) נבדקו שורה-שורה מול כל טבלאות המקור ותואמות. ארבע הזוגות הזהים ב-Outer (M60=M67, M61=M66, M62=M65, M63=M64) כך גם במקור. מה שלא ניתן לאמת מצילום: המיפוי והחיבור הפשוט והיחידות. את זה מאמתים במדידה חוזרת.</li><li>התוצאה היא חיזוי. מדידה חוזרת במכשיר היא האימות האמיתי.</li></ul>
+<h3>הטבלאות המלאות</h3><p class="tag">Inner: תוספת, מחבר, X, Y, Z. Outer: תוספת, מחבר, X, Z. * = תוספת מיוחדת.</p><b>Inner</b>`;
+ for(const p in gi)h+=`<details><summary>${p}</summary>${tbl(gi[p],true)}</details>`;
+ h+='<b>Outer</b>';
+ for(const p in go)h+=`<details><summary>${p}</summary>${tbl(go[p],false)}</details>`;
+ $('help').innerHTML=h}
+
+const occ=new Set(),PK=r=>r.g+'|'+r.p;let poss=[...new Set(ALL.map(PK))];
+const instr=c=>'התקן: '+label(c.r);
+const grp=(g,t)=>`<b>${t}</b><div class="cb">`+poss.filter(k=>k.startsWith(g+'|')).map(k=>`<label><input type="checkbox" data-k="${k}">${k.split('|')[1]}</label>`).join('')+'</div>';
+const buildOcc=()=>{$('occ').innerHTML=grp('in','Inner')+grp('out','Outer')};
+const drawOcc=()=>{$('osum').textContent=occ.size?`(${occ.size} תפוסות)`:'';$('occnote').textContent=occ.size?`נקודות תפוסות מסומנות: ${occ.size} (נשארות גם אחרי "נקה הכל" ובין טעינות)`:''};
+$('occ').onchange=e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k)return;e.target.checked?occ.add(k):occ.delete(k);drawOcc()};
+$('oclr').onclick=()=>{occ.clear();document.querySelectorAll('#occ input').forEach(x=>{x.checked=false});drawOcc()};
+let lastF='v0';$('inp').addEventListener('focusin',e=>{if(e.target&&e.target.id)lastF=e.target.id});
+$('sign').onmousedown=e=>e.preventDefault();
+$('sign').onclick=()=>{const f=$(lastF);let v=f.value.trim();if(v==='')return;if(/^[-\u2212]/.test(v))v=v.slice(1);else if(/[-\u2212]$/.test(v))v=v.slice(0,-1);else v='-'+v;f.value=v;f.focus();f.dispatchEvent(new Event('input',{bubbles:true}))};
+let LSK='calc_a';const SET_V=['max','tol','tol2','tolx','cin'],SET_C=['neg','spec','oZ','iXt','oXt','full4','uniq','deep','late','est'];
+let theme='auto';
+const applyTheme=m=>{theme=m;if(m==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',m);$('th').textContent=m==='auto'?'◐ אוטו':m==='dark'?'☾ כהה':'☀ בהיר'};
+const DEF_OCC={2:['in|M30','in|M31','in|M32','in|M70','in|M71','in|M72','in|M73','in|M74']};
+const defOcc=()=>{(DEF_OCC[PROJ]||[]).forEach(k=>{if(poss.includes(k)){occ.add(k);const c=document.querySelector('#occ input[data-k="'+k+'"]');if(c)c.checked=true}})};
+const saveState=()=>{try{const o={occ:[...occ],theme};SET_V.forEach(id=>{const e=$(id);if(e)o[id]=e.value});SET_C.forEach(id=>{const e=$(id);if(e)o[id]=e.checked});localStorage.setItem(LSK,JSON.stringify(o));localStorage.setItem('calc_t',theme)}catch(e){}};
+const loadState=()=>{try{const t=localStorage.getItem(LSK);if(!t)return;const o=JSON.parse(t);SET_V.forEach(id=>{const e=$(id);if(e&&o[id]!==undefined)e.value=o[id]});SET_C.forEach(id=>{const e=$(id);if(e&&typeof o[id]==='boolean')e.checked=o[id]});(o.occ||[]).forEach(k=>{if(poss.includes(k)){occ.add(k);const c=document.querySelector('#occ input[data-k="'+k+'"]');if(c)c.checked=true}});drawOcc();if(o.theme)applyTheme(o.theme)}catch(e){}};
+$('th').onclick=()=>{applyTheme(theme==='auto'?'light':theme==='light'?'dark':'auto');saveState()};
+document.querySelectorAll('.opt').forEach(o=>o.addEventListener('change',saveState));$('tol').addEventListener('input',saveState);$('tol2').addEventListener('input',saveState);$('tolx').addEventListener('input',saveState);$('cin').addEventListener('input',saveState);$('oclr').addEventListener('click',saveState);
+$('rst').onclick=()=>{try{localStorage.removeItem(LSK);localStorage.removeItem('calc_t')}catch(e){}occ.clear();document.querySelectorAll('#occ input').forEach(x=>{x.checked=false});defOcc();$('max').value='99';$('tol').value='70';$('tol2').value='50';$('tolx').value='100';$('cin').value='0';[['late',0],['est',1],['neg',0],['spec',0],['oZ',1],['iXt',1],['oXt',1],['full4',0],['uniq',0],['deep',0]].forEach(a=>{const e=$(a[0]);if(e)e.checked=!!a[1]});applyTheme('auto');drawOcc()};
+function setProject(n,initial){
+ if(!initial)saveState();
+ PROJ=n;LSK=n===1?'calc_a':'calc_b';ALL=n===1?I.concat(OU):I2.concat(OU2);poss=[...new Set(ALL.map(PK))];
+ occ.clear();buildOcc();
+ $('max').value='99';$('tol').value='70';$('tol2').value='50';$('tolx').value='100';$('cin').value='0';
+ [['late',0],['est',1],['neg',0],['spec',0],['oZ',1],['iXt',1],['oXt',1],['full4',0],['uniq',0],['deep',0]].forEach(a=>{const e=$(a[0]);if(e)e.checked=!!a[1]});
+ let hadSaved=false;try{hadSaved=localStorage.getItem(LSK)!==null}catch(e){}
+ if(initial){loadState();try{const g=localStorage.getItem('calc_t');if(g)applyTheme(g)}catch(e){}}else{const th=theme;loadState();applyTheme(th)}
+ if(!hadSaved)defOcc();
+ NM.forEach((_,i)=>{$('v'+i).value=''});LAST=null;$('out').innerHTML='';clearErr();
+ $('r_tol1').style.display=n===1?'':'none';['r_tol2','r_est','r_late'].forEach(id=>{$(id).style.display=n===2?'':'none'});
+ $('spectxt').textContent=n===1?'כלול תוספות מיוחדות d / t (משמעות לא ידועה)':'כלול שורות DEFAULT (משמעות לא ידועה)';
+ $('ptag').textContent=n===1?'(פרויקט ד)':'(פרויקט ה)';
+ $('pj1').classList.toggle('on',n===1);$('pj2').classList.toggle('on',n===2);
+ drawOcc();buildHelp();
+ try{localStorage.setItem('calc_p',String(n))}catch(e){}}
+$('pj1').onclick=()=>{if(!busy&&PROJ!==1)setProject(1)};$('pj2').onclick=()=>{if(!busy&&PROJ!==2)setProject(2)};
+{let sp=1;try{sp=+localStorage.getItem('calc_p')||1}catch(e){}setProject(sp===2?2:1,true)}
+
+const FLAGN={s:'הפוך סימן',oZ:'Z של Outer על Z',iXt:'X של Inner על Xtotal',oXt:'X של Outer על Xtotal'};
+function verifyPrediction(){
+ const L=LAST;if(!L)return;const vo=$('vout');
+ const pv=[0,1,2,3,4].map(i=>parseNum($('af'+i).value));
+ const errs=[];pv.forEach((p,i)=>{if(p.err)errs.push(NM[i]+': '+p.err);else if(p.empty)errs.push(NM[i]+': חסר ערך')});
+ if(errs.length){vo.innerHTML='<div class="card bad"><b>קלט לא תקין</b><br>'+errs.join('<br>')+'</div>';return}
+ const after=pv.map(p=>p.v),meas=after.map((x,i)=>x-L.cur[i]);
+ const predD=f=>{const d=[0,0,0,0,0];L.rows.forEach(r=>vecF(r,f).forEach((x,i)=>{d[i]+=x}));return d};
+ const errOf=d=>d.reduce((q,x,i)=>q+(x-meas[i])*(x-meas[i]),0);
+ const f0=L.flags,pd=predD(f0),e0=errOf(pd);
+ const good=pd.every((x,i)=>Math.abs(x-meas[i])<=Math.max(3,0.1*Math.abs(x)));
+ let bestV=null;
+ for(const s of [1,-1])for(const oZ of [false,true])for(const iXt of [false,true])for(const oXt of [false,true]){const f={s,oZ,iXt,oXt,c:f0.c},e=errOf(predD(f));const ch=(f.s!==f0.s)+(f.oZ!==f0.oZ)+(f.iXt!==f0.iXt)+(f.oXt!==f0.oXt);
+  if(!bestV||e<bestV.e-1e-9||(Math.abs(e-bestV.e)<=1e-9&&ch<bestV.ch))bestV={f,e,ch}}
+ const rowsN=L.rows.length,fullM=(1<<rowsN)-1;
+ const subD=m=>{const d=[0,0,0,0,0];for(let i=0;i<rowsN;i++)if(m>>i&1)vecF(L.rows[i],f0).forEach((x,k)=>{d[k]+=x});return d};
+ let bestS=null;if(rowsN<=12)for(let m=1;m<fullM;m++){const d=subD(m),e=errOf(d);if(!bestS||e<bestS.e)bestS={m,e,d}}
+ let t='<div class="sc"><table><tr><th></th><th>נוכחי</th><th>תחזית</th><th>נמדד</th><th>הפרש</th></tr>'+NM.map((k,i)=>'<tr><td>'+k+'</td><td><bdi dir="ltr">'+fmt(L.cur[i])+'</bdi></td><td><bdi dir="ltr">'+fmt(L.cur[i]+pd[i])+'</bdi></td><td><bdi dir="ltr">'+fmt(after[i])+'</bdi></td><td style="color:'+(Math.abs(L.cur[i]+pd[i]-after[i])>Math.max(3,0.1*Math.abs(pd[i]))?'var(--bad)':'var(--ok)')+'"><bdi dir="ltr">'+fmt(after[i]-L.cur[i]-pd[i])+'</bdi></td></tr>').join('')+'</table></div>';
+ let verdict;
+ if(good)verdict='<div class="card"><b style="color:var(--ok)">התחזית מדויקת</b><br>ההפרש בכל הערכים עד 3 יחידות או 10%. ההנחות מתאימות לציוד עבור האפשרות הזו.</div>';
+ else if(bestS&&bestS.e<0.25*e0&&(bestV.ch===0||bestS.e<=bestV.e)){
+  const inS=[],outS=[];L.rows.forEach((r,i)=>(bestS.m>>i&1?inS:outS).push(label(r)));
+  const offD=NM.map((k,i)=>Math.abs(bestS.d[i]-meas[i])<=Math.max(3,0.1*Math.abs(bestS.d[i]))?null:k+' <bdi dir="ltr">'+fmt(meas[i]-bestS.d[i])+'</bdi>').filter(Boolean);
+  verdict='<div class="card warn"><b>המדידה מתאימה להתקנה של חלק מהתוספות בלבד</b><br><span class="tag">(בחירה מתוך התוספות שהוצעו בלבד)</span><br>כאילו הורכבה:<br>'+inS.map(x=>'• '+x).join('<br>')+'<br>ולא הורכבו:<br>'+outS.map(x=>'• '+x).join('<br>')+(offD.length?'<br><span class="tag">פערים שנותרו (נמדד פחות תחזית): '+offD.join(' · ')+'. ערך שזז בלי תוספת שמשפיעה עליו (למשל Xout כשלא הורכבה תוספת ב-Outer) מעיד על רעש מדידה או על קישור בין המנגנונים. מדוד שוב בלי שינוי כדי לבדוק רעש.</span>':'<br><span class="tag">כל הערכים תואמים להתקנה החלקית.</span>')+'</div>';}
+ else if(bestV.ch>0&&bestV.e<0.25*e0){const ch=['s','oZ','iXt','oXt'].filter(k=>bestV.f[k]!==f0[k]).map(k=>FLAGN[k]+(k==='s'?(bestV.f.s===-1?': להפעיל':': לכבות'):(bestV.f[k]?': להפעיל':': לכבות')));
+  verdict='<div class="card warn"><b>המדידה מתאימה יותר להגדרות אחרות</b><br>'+ch.join('<br>')+'<br><span class="tag">אחרי ההחלה הזן את המדידה החדשה כערכים נוכחיים והרץ שוב.</span><br><button id="applyfit" class="mini">החל הגדרות אלה</button></div>';}
+ else verdict='<div class="card bad"><b>התחזית לא תואמת את המדידה</b><br>אין הגדרה שמסבירה את ההפרש. בדוק יחידות, שהמחברים והתוספות הורכבו בדיוק כפי שהוצג, או מדוד שוב.</div>';
+ let gCard='',calCard='',calVal=null;
+ if(!good){
+  const rs=ALL.filter(r=>$('spec').checked||!r.sp),vv=rs.map(r=>vecF(r,f0));
+  let b1=null;rs.forEach((r,i)=>{const x=errOf(vv[i]);if(!b1||x<b1.e)b1={e:x,i:[i]}});
+  let b2=null;for(let i=0;i<rs.length;i++)for(let j=i+1;j<rs.length;j++){if(rs[i].g===rs[j].g&&rs[i].p===rs[j].p)continue;const x=errOf(vv[i].map((y,k)=>y+vv[j][k]));if(!b2||x<b2.e)b2={e:x,i:[i,j]}}
+  const gb=(b2&&b2.e<0.75*b1.e)?b2:b1,gd=gb.i.reduce((d,i)=>d.map((x,k)=>x+vv[i][k]),[0,0,0,0,0]);
+  const same=bestS&&gb.i.length===L.rows.filter((r,k)=>bestS.m>>k&1).length&&gb.i.every(i=>L.rows.some((r,k)=>(bestS.m>>k&1)&&r===rs[i]));
+  if(!same)gCard='<div class="card"><b>ההתאמה הטובה ביותר בכל הטבלה</b><br>'+gb.i.map(i=>'• '+label(rs[i])).join('<br>')+'<br><span class="tag">פערים (נמדד פחות תחזית): '+NM.map((k,i)=>k+' <bdi dir="ltr">'+fmt(meas[i]-gd[i])+'</bdi>').join(' · ')+'</span><br><span class="tag">זו הערכה מנקודת מדידה אחת בלבד. אם זו אינה ההתקנה שביצעת, ייתכן שהורכב סוג או מיקום אחר מהמוצע.</span></div>';
+ {const allIn=gb.i.every(i=>rs[i].g==='in');
+  if(allIn){const sX=gb.i.reduce((q,i)=>q+f0.s*rs[i].e[0],0),res=NM.map((k,i)=>meas[i]-gd[i]);
+   const fit=[0,1,2].every(i=>Math.abs(res[i])<=Math.max(5,0.1*Math.abs(gd[i])));
+   if(fit&&Math.abs(res[4])>3&&Math.abs(sX)>=20){const c2=Math.round(((f0.c||0)+res[4]/sX)*100)/100;
+    if(Math.abs(c2)<=1&&c2!==(f0.c||0)){calVal=c2;calCard='<div class="card warn"><b>כיול מוצע: קישור Inner→Xout</b><br>Xin, Y ו-Z תואמים להתקנה, אבל Xout זז בלי תוספת ב-Outer. מקדם <bdi dir="ltr">'+c2+'</bdi> היה מסביר את הפער ב-Xout וב-Xtotal.<br><span class="tag">הערכה מנקודת מדידה אחת: ייתכן שזה רעש מדידה. מדוד שוב ללא שינוי לפני שמחילים. אחרי ההחלה הרץ שוב כדי לראות אפשרויות מעודכנות.</span><br><button id="applycal" class="mini">החל מקדם '+c2+'</button></div>'}}}}
+ }
+ vo.innerHTML=t+verdict+gCard+calCard+'<button id="usemeas" class="mini" style="width:100%;margin-top:8px">השתמש במדידה כערכים נוכחיים להמשך התאמה</button>';
+ const ac=$('applycal');if(ac)ac.onclick=()=>{$('cin').value=String(calVal);saveState();ac.textContent='הוחל';ac.disabled=true};
+ $('usemeas').onclick=()=>{after.forEach((x,i)=>{$('v'+i).value=String(x)});$('out').innerHTML='';window.scrollTo({top:0,behavior:'smooth'});$('v0').focus()};
+ const ab=$('applyfit');if(ab)ab.onclick=()=>{$('neg').checked=bestV.f.s===-1;$('oZ').checked=bestV.f.oZ;$('iXt').checked=bestV.f.iXt;$('oXt').checked=bestV.f.oXt;saveState();ab.textContent='הוחלו';ab.disabled=true};
+}
+buildHelp();
+$('hb').onclick=()=>{const e=$('help'),o=e.style.display=='block';e.style.display=o?'none':'block';$('hb').textContent=o?'הסבר מלא':'סגור הסבר'};
+</script></body></html>
